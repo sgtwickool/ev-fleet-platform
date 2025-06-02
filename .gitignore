@@ -42,7 +42,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # --- General IDE/Editor ---
-.vscode/
+# .vscode/ is not ignored so launch.json and shared settings can be committed
 .idea/
 *.sln.iml
 .DS_Store

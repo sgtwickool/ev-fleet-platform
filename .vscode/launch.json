@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Launch EvFleetOptimizer.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/ev-fleet-optimizer/EvFleetOptimizer.API/bin/Debug/net8.0/EvFleetOptimizer.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ev-fleet-optimizer/EvFleetOptimizer.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "Now listening on: (https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/ev-fleet-optimizer/EvFleetOptimizer.API/Views"
+            }
+        },
+        {
+            "name": "Docker .NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "1",
+            "pipeTransport": {
+                "pipeProgram": "podman", // can change this to docker if you want to use Docker instead of Podman
+                "pipeArgs": [ "exec", "-i", "ev-fleet-platform_ev-fleet-optimizer_1" ],
+                "debuggerPath": "/vsdbg/vsdbg",
+                "pipeCwd": "/",
+                "quoteArgs": false
+            },
+            "justMyCode": true
+        }
+    ]
+}
