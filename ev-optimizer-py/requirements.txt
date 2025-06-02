@@ -1,0 +1,4 @@
+flask==3.1.1
+ortools==9.12.4544
+# Pin all dependencies to specific versions for reproducibility and security
+# Add any additional dependencies below as needed
