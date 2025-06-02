@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvFleetOptimizer.API", "EvFleetOptimizer.API\EvFleetOptimizer.API.csproj", "{525061EF-6E8A-43BE-AD1A-FF1F49C271A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvFleetOptimizer.Core", "EvFleetOptimizer.Core\EvFleetOptimizer.Core.csproj", "{485A39AF-DEF6-4A58-92E2-60076263B19F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvFleetOptimizer.Infrastructure", "EvFleetOptimizer.Infrastructure\EvFleetOptimizer.Infrastructure.csproj", "{FF5BCD55-F5F3-4016-847D-9C8E75BB9C7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvFleetOptimizer.Services", "EvFleetOptimizer.Services\EvFleetOptimizer.Services.csproj", "{8A5300D1-2FBE-4F65-9997-42CC2D542FB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvFleetOptimizer.Tests", "EvFleetOptimizer.Tests\EvFleetOptimizer.Tests.csproj", "{74A776BC-B824-43E0-A4CC-55D96E63C1F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{525061EF-6E8A-43BE-AD1A-FF1F49C271A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{525061EF-6E8A-43BE-AD1A-FF1F49C271A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{525061EF-6E8A-43BE-AD1A-FF1F49C271A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{525061EF-6E8A-43BE-AD1A-FF1F49C271A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{485A39AF-DEF6-4A58-92E2-60076263B19F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{485A39AF-DEF6-4A58-92E2-60076263B19F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{485A39AF-DEF6-4A58-92E2-60076263B19F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{485A39AF-DEF6-4A58-92E2-60076263B19F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF5BCD55-F5F3-4016-847D-9C8E75BB9C7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF5BCD55-F5F3-4016-847D-9C8E75BB9C7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF5BCD55-F5F3-4016-847D-9C8E75BB9C7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF5BCD55-F5F3-4016-847D-9C8E75BB9C7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A5300D1-2FBE-4F65-9997-42CC2D542FB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A5300D1-2FBE-4F65-9997-42CC2D542FB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A5300D1-2FBE-4F65-9997-42CC2D542FB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A5300D1-2FBE-4F65-9997-42CC2D542FB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74A776BC-B824-43E0-A4CC-55D96E63C1F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74A776BC-B824-43E0-A4CC-55D96E63C1F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74A776BC-B824-43E0-A4CC-55D96E63C1F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74A776BC-B824-43E0-A4CC-55D96E63C1F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

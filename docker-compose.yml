@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  db:
+    image: docker.io/library/postgres:16
+    container_name: evfleetoptimizer-db
+    environment:
+      POSTGRES_USER: evfleet
+      POSTGRES_PASSWORD: evfleetpw
+      POSTGRES_DB: evfleetdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  ev-fleet-optimizer:
+    build:
+      context: ./ev-fleet-optimizer
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=evfleetdb;Username=evfleet;Password=evfleetpw
+    ports:
+      - "5000:8080"
+      - "5005:5005" # Expose debugger port for VS Code
+    restart: unless-stopped
+
+  ev-optimizer-py:
+    build:
+      context: ./ev-optimizer-py
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,64 @@
+# Root .gitignore for monorepo: .NET + Python
+
+# --- .NET (C#) ---
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vspscc
+*.vssscc
+*.dbmdl
+*.pdb
+*.cache
+*.mdb
+*.opendb
+*.pidb
+*.svd
+*.scc
+*.http
+TestResults/
+*Migrations/*Snapshot.cs
+secrets.json
+appsettings.Development.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg-info/
+.eggs/
+dist/
+build/
+venv/
+.env
+.env.*
+.envrc
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- General IDE/Editor ---
+.vscode/
+.idea/
+*.sln.iml
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+
+# --- OS/Other ---
+*.swp
+*.swo
+*~
+
+# --- Docker ---
+**/.docker/
+**/Dockerfile*
+
+# --- Misc ---
+# Add more ignores as needed for new languages/tools
