@@ -58,7 +58,8 @@ Thumbs.db
 
 # --- Docker ---
 **/.docker/
-**/Dockerfile*
+# Do not ignore Dockerfiles in project roots
+# **/Dockerfile*
 
 # --- Misc ---
 # Add more ignores as needed for new languages/tools
