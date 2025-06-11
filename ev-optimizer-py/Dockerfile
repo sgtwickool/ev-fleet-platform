@@ -21,7 +21,7 @@ RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
 # Set environment variable for Flask
-ENV FLASK_APP=ev_optimizer.py
+ENV FLASK_APP=app.py
 
 # Run the Flask app
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5001"]

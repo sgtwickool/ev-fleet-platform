@@ -28,6 +28,8 @@ services:
   ev-optimizer-py:
     build:
       context: ./ev-optimizer-py
+    environment:
+      - GRASSHOPPER_API_KEY=${GRASSHOPPER_API_KEY}
     ports:
       - "5001:5001"
     restart: unless-stopped

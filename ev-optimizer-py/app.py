@@ -19,7 +19,7 @@
 # Example advanced JSON payload for /optimize-trip:
 # {
 #   "distance_matrix": [[0, 20, 18, 12], [20, 0, 30, 14], [18, 30, 0, 22], [12, 14, 22, 0]],
-#   "num_vehicles": 2,
+#   "num_vehicles": 2,, data["hints"]
 #   "depot": 0,
 #   "vehicles": [
 #     {"id": "veh1", "soc": 80, "max_range": 250, "location": 0},
@@ -47,38 +47,55 @@
 
 from flask import Flask, request, jsonify
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+import os
+from graphhopper_matrix import build_distance_matrix
+from optimizer import optimize_trip
 
-app = Flask(__name__)
+# Grasshopper API Key
+GRASSHOPPER_API_KEY = os.environ.get("GRASSHOPPER_API_KEY")
 
-@app.route('/optimize-trip', methods=['POST'])
+app: Flask = Flask(__name__)
+
+
+@app.route("/optimize-trip", methods=["POST"])
 def optimize():
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'Missing JSON payload'}), 400
+        return jsonify({"error": "Missing JSON payload"}), 400
     # Required fields
-    required_fields = ['distance_matrix', 'num_vehicles', 'depot', 'vehicles', 'deliveries', 'charging_stations', 'drivers']
+    required_fields = [
+        "locations",
+        "num_vehicles",
+        "depot",
+        "vehicles",
+        "deliveries",
+        "charging_stations",
+        "drivers",
+    ]
     for field in required_fields:
         if field not in data:
-            return jsonify({'error': f'Missing required field: {field}'}), 400
+            return jsonify({"error": f"Missing required field: {field}"}), 400
 
-    distance_matrix = data['distance_matrix']
-    num_vehicles = data['num_vehicles']
-    depot = data['depot']
-    vehicles = data['vehicles']
-    deliveries = data['deliveries']
-    charging_stations = data['charging_stations']
-    drivers = data['drivers']
+    distance_matrix = build_distance_matrix(data["locations"], "car")
+    num_vehicles = data["num_vehicles"]
+    depot = data["depot"]
+    vehicles = data["vehicles"]
+    deliveries = data["deliveries"]
+    charging_stations = data["charging_stations"]
+    drivers = data["drivers"]
 
-    # TODO: Use advanced data in optimization logic
-    # For now, just return the parsed data and a stub result
-    result = {
-        'message': 'Advanced payload received. Optimization logic for new fields not yet implemented.',
-        'vehicles': vehicles,
-        'deliveries': deliveries,
-        'charging_stations': charging_stations,
-        'drivers': drivers
-    }
+    # Call the optimization logic from optimizer.py
+    result = optimize_trip(
+        distance_matrix,
+        num_vehicles,
+        depot,
+        vehicles,
+        deliveries,
+        charging_stations,
+        drivers,
+    )
     return jsonify(result)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(port=5001)
