@@ -42,7 +42,18 @@ def main():
         drivers
     )
     print("Optimization result:")
-    print(result)
+    if 'routes' in result:
+        for i, route in enumerate(result['routes']):
+            print(f"\nVehicle {i+1} route:")
+            for step in route:
+                loc = step['location']
+                soc = step['soc']
+                is_cs = step['is_charging_station']
+                cs_str = ' (charging station)' if is_cs else ''
+                print(f"  Location {loc}{cs_str}, SoC: {soc}")
+        print(f"\nMessage: {result['message']}")
+    else:
+        print(result)
 
 if __name__ == "__main__":
     main()
