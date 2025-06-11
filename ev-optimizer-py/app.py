@@ -49,7 +49,7 @@ from flask import Flask, request, jsonify
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import os
 from graphhopper_matrix import build_distance_matrix
-from optimizer import optimize_trip
+from optimizer import optimize_vehicle_routes
 
 # Grasshopper API Key
 GRASSHOPPER_API_KEY = os.environ.get("GRASSHOPPER_API_KEY")
@@ -65,12 +65,12 @@ def optimize():
     # Required fields
     required_fields = [
         "locations",
-        "num_vehicles",
-        "depot",
-        "vehicles",
-        "deliveries",
-        "charging_stations",
-        "drivers",
+        "num_vehicles", # Number of vehicles in the fleet
+        "depots", # Indexes of the depots in the distance matrix (with private charging stations)
+        "vehicles", # List of vehicles with state of charge, max range, and current location
+        "deliveries", # List of deliveries with location, urgency, and time windows
+        "charging_stations", # List of charging stations with location, cost structure, and slot availability
+        "drivers", # List of drivers with id and availability
     ]
     for field in required_fields:
         if field not in data:
@@ -78,17 +78,17 @@ def optimize():
 
     distance_matrix = build_distance_matrix(data["locations"], "car")
     num_vehicles = data["num_vehicles"]
-    depot = data["depot"]
+    depots = data["depots"]
     vehicles = data["vehicles"]
     deliveries = data["deliveries"]
     charging_stations = data["charging_stations"]
     drivers = data["drivers"]
 
     # Call the optimization logic from optimizer.py
-    result = optimize_trip(
+    result = optimize_vehicle_routes(
         distance_matrix,
         num_vehicles,
-        depot,
+        depots,
         vehicles,
         deliveries,
         charging_stations,
