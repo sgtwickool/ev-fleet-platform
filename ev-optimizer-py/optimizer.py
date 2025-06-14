@@ -1,152 +1,131 @@
-# optimizer.py
-# Contains the optimization logic for EV fleet routing.
+"""
+optimizer.py
+Main entry point for EV fleet route optimization.
+"""
 
+import logging
+from typing import Any, Dict, List, Optional
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+from constraints import (
+    add_distance_dimension,
+    add_time_windows,
+    restrict_unavailable_vehicles,
+)
+from extraction import extract_routes
+from utils import validate_inputs, MAX_TIME, DEFAULT_TIME_WINDOW
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-def optimize_vehicle_routes(
-    distance_matrix,
-    num_vehicles,
-    depots,
-    vehicles,
-    deliveries,
-    charging_stations,
-    drivers,
-):
+class EVFleetOptimizer:
     """
-    Optimize vehicle routes based on the provided distance matrix and advanced payload.
-    This function implements a basic VRP using ortools. Advanced constraints (SOC, time windows, etc.)
-    can be added as needed.
+    Optimizer for electric vehicle fleet routing with SoC and charging constraints.
     """
-    # Handle depots: OR-Tools expects int for single depot, or two lists for multiple starts/ends
-    if isinstance(depots, list) and len(depots) == 1:
-        depots = depots[0]
-    manager = pywrapcp.RoutingIndexManager(len(distance_matrix), num_vehicles, depots)
 
-    # Create Routing Model
-    routing = pywrapcp.RoutingModel(manager)
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.config = config or {}
 
-    # --- Advanced Constraints: SoC and Charging Stations ---
-    # For each vehicle, set its max distance (based on SoC and max_range)
-    max_ranges = [v.get("soc", 100) / 100.0 * v.get("max_range", 200) for v in vehicles]
+    def optimize_vehicle_routes(
+        self,
+        distance_matrix: List[List[int]],
+        num_vehicles: int,
+        depots: Any,
+        vehicles: List[Dict[str, Any]],
+        deliveries: List[Dict[str, Any]],
+        charging_stations: List[Dict[str, Any]],
+        drivers: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Optimize vehicle routes based on the provided distance matrix and advanced payload.
+        Returns a dict with routes and status message.
+        """
+        try:
+            validate_inputs(distance_matrix, num_vehicles, depots, vehicles, deliveries)
+        except ValueError as e:
+            logger.error(f"Input validation failed: {e}")
+            return {"message": str(e)}
 
-    # Add a dimension for distance (to model battery usage)
-    def distance_callback(from_index, to_index):
-        from_node = manager.IndexToNode(from_index)
-        to_node = manager.IndexToNode(to_index)
-        return distance_matrix[from_node][to_node]
-
-    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
-    routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
-    routing.AddDimension(
-        transit_callback_index,
-        0,  # no slack
-        int(max(max_ranges)),  # maximum distance any vehicle can travel
-        True,  # start cumul to zero
-        "Distance",
-    )
-    distance_dimension = routing.GetDimensionOrDie("Distance")
-    # Set vehicle-specific max distances (battery limits)
-    for vehicle_id, max_range in enumerate(max_ranges):
-        distance_dimension.CumulVar(routing.End(vehicle_id)).SetMax(int(max_range))
-
-    # --- Charging Stations: allow recharging at certain nodes ---
-    charging_locations = set(cs["location"] for cs in charging_stations)
-    # For each node, if it's a charging station, allow a 'recharge' (reset SoC)
-    # This is a simplification: in real use, you'd model time/cost for charging
-    # Here, we allow the distance dimension to reset at charging stations
-    for node in charging_locations:
-        index = manager.NodeToIndex(node)
-        distance_dimension.SlackVar(index).SetMax(int(max(max_ranges)))
-
-    # --- Time Windows (if present in deliveries) ---
-    if any("time_window" in d for d in deliveries):
-        # Assume all locations have a time window, default to [0, 10000]
-        time_windows = [d.get("time_window", [0, 10000]) for d in deliveries]
-        # Add depot time window
-        for depot in depots if isinstance(depots, list) else [depots]:
-            time_windows.insert(depot, [0, 10000])
-
-        def time_callback(from_index, to_index):
-            from_node = manager.IndexToNode(from_index)
-            to_node = manager.IndexToNode(to_index)
-            return distance_matrix[from_node][
-                to_node
-            ]  # or use travel time if available
-
-        time_callback_index = routing.RegisterTransitCallback(time_callback)
-        routing.AddDimension(
-            time_callback_index,
-            10000,  # allow waiting
-            10000,  # max time per vehicle
-            False,
-            "Time",
+        # Handle depots: OR-Tools expects int for single depot, or two lists for multiple starts/ends
+        if isinstance(depots, list) and len(depots) == 1:
+            depots = depots[0]
+        manager = pywrapcp.RoutingIndexManager(
+            len(distance_matrix), num_vehicles, depots
         )
-        time_dimension = routing.GetDimensionOrDie("Time")
-        for location_idx, window in enumerate(time_windows):
-            index = manager.NodeToIndex(location_idx)
-            time_dimension.CumulVar(index).SetRange(window[0], window[1])
+        routing = pywrapcp.RoutingModel(manager)
 
-    # --- Driver Availability (if present) ---
-    if drivers:
-        available_vehicles = [
-            i for i, drv in enumerate(drivers) if drv.get("available", True)
+        # --- Constraints ---
+        max_ranges = [
+            v.get("soc", 100) / 100.0 * v.get("max_range", 200) for v in vehicles
         ]
-        # Only assign routes to available vehicles
-        for vehicle_id in range(num_vehicles):
-            if vehicle_id not in available_vehicles:
-                routing.VehicleVar(routing.Start(vehicle_id)).RemoveValue(vehicle_id)
+        # Add distance dimension and charging constraints
+        distance_dimension = add_distance_dimension(
+            routing, manager, distance_matrix, max_ranges
+        )
+        if charging_stations:
+            from constraints import add_charging_constraints
 
-    # --- Solve and Extract Solution ---
-    search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-    search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
-    )
-    search_parameters.local_search_metaheuristic = (
-        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    )
-    search_parameters.time_limit.seconds = 10
-
-    solution = routing.SolveWithParameters(search_parameters)
-
-    routes = []
-    if solution:
-        for vehicle_id in range(num_vehicles):
-            index = routing.Start(vehicle_id)
-            route = []
-            soc = max_ranges[vehicle_id]
-            while not routing.IsEnd(index):
-                node = manager.IndexToNode(index)
-                route.append(
-                    {
-                        "location": node,
-                        "soc": soc,
-                        "is_charging_station": node in charging_locations,
-                    }
-                )
-                next_index = solution.Value(routing.NextVar(index))
-                distance = (
-                    distance_matrix[node][manager.IndexToNode(next_index)]
-                    if not routing.IsEnd(next_index)
-                    else 0
-                )
-                soc -= distance
-                if node in charging_locations:
-                    soc = max_ranges[vehicle_id]  # recharge
-                index = next_index
-            route.append(
-                {
-                    "location": manager.IndexToNode(index),
-                    "soc": soc,
-                    "is_charging_station": False,
-                }
+            add_charging_constraints(
+                distance_dimension, manager, charging_stations, max_ranges
             )
-            routes.append(route)
-        return {
-            "routes": routes,
-            "message": "Optimization with SoC and charging constraints successful.",
-        }
-    else:
-        return {
-            "message": "No solution found.",
-        }
+        if any("time_window" in d for d in deliveries):
+            add_time_windows(routing, manager, distance_matrix, deliveries, depots)
+        if drivers:
+            restrict_unavailable_vehicles(routing, drivers, num_vehicles)
+
+        # --- Solve and Extract Solution ---
+        search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+        search_parameters.first_solution_strategy = (
+            routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+        )
+        search_parameters.local_search_metaheuristic = (
+            routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
+        )
+        search_parameters.time_limit.seconds = self.config.get("solver_time_limit", 10)
+
+        logger.info("Starting solver...")
+        solution = routing.SolveWithParameters(search_parameters)
+        if solution:
+            logger.info("Solution found.")
+            charging_locations = (
+                set(cs["location"] for cs in charging_stations)
+                if charging_stations
+                else set()
+            )
+            routes = extract_routes(
+                solution,
+                routing,
+                manager,
+                num_vehicles,
+                max_ranges,
+                charging_locations,
+                distance_matrix,
+            )
+            # Human-readable formatting
+            readable_routes = []
+            for vehicle_idx, route in enumerate(routes):
+                steps = []
+                for step in route:
+                    loc = step["location"]
+                    soc = step["soc"]
+                    is_cs = step["is_charging_station"]
+                    cs_str = " (charging station)" if is_cs else ""
+                    steps.append(f"Location {loc}{cs_str}, SoC: {soc:.1f}")
+                readable_routes.append({"vehicle": vehicle_idx + 1, "route": steps})
+            return {
+                "routes": routes,
+                "readable_routes": readable_routes,
+                "message": "Optimization successful. See 'readable_routes' for details.",
+            }
+        else:
+            logger.warning("No solution found.")
+            return {"message": "No solution found."}
+
+
+def optimize_vehicle_routes(*args, **kwargs):
+    """
+    Backward-compatible wrapper for the EVFleetOptimizer class.
+    """
+    optimizer = EVFleetOptimizer()
+    return optimizer.optimize_vehicle_routes(*args, **kwargs)

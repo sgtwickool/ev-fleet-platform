@@ -6,9 +6,7 @@ import os
 import requests
 
 # Remove the hardcoded API key and use environment variable instead
-GRAPHOPPER_API_KEY = (
-    os.environ.get("GRASSHOPPER_API_KEY")
-)
+GRAPHOPPER_API_KEY = os.environ.get("GRASSHOPPER_API_KEY")
 GRAPHOPPER_MATRIX_URL = f"https://graphhopper.com/api/1/matrix?key={GRAPHOPPER_API_KEY}"
 
 

@@ -65,12 +65,12 @@ def optimize():
     # Required fields
     required_fields = [
         "locations",
-        "num_vehicles", # Number of vehicles in the fleet
-        "depots", # Indexes of the depots in the distance matrix (with private charging stations)
-        "vehicles", # List of vehicles with state of charge, max range, and current location
-        "deliveries", # List of deliveries with location, urgency, and time windows
-        "charging_stations", # List of charging stations with location, cost structure, and slot availability
-        "drivers", # List of drivers with id and availability
+        "num_vehicles",  # Number of vehicles in the fleet
+        "depots",  # Indexes of the depots in the distance matrix (with private charging stations)
+        "vehicles",  # List of vehicles with state of charge, max range, and current location
+        "deliveries",  # List of deliveries with location, urgency, and time windows
+        "charging_stations",  # List of charging stations with location, cost structure, and slot availability
+        "drivers",  # List of drivers with id and availability
     ]
     for field in required_fields:
         if field not in data:
